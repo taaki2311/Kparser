@@ -6,3 +6,4 @@ lex.yy.c
 y.tab.o
 lex.yy.o
 Kparser
+y.output

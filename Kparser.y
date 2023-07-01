@@ -7,6 +7,8 @@
 int yylex(void);
 void yyerror(const char *error);
 
+int yydebug = 1;
+
 extern FILE *yyin;
 %}
 
@@ -19,11 +21,10 @@ extern FILE *yyin;
 %token PROMPT
 %token DEFAULT
 %token DEPENDS
-%token HELP
 
 %token <string> VARIABLE
 %token <string> TYPE
-%token <string> HELP_TEXT
+%token <string> HELP
 %token <string> STRING
 %token <string> NUMBER
 %token <string> HEX_VALUE
@@ -34,33 +35,30 @@ extern FILE *yyin;
 
 %%
 
-statement       : create_choice                     {printf("statement create choice\n");}
-                | create_config                     {printf("statement create config\n");}
-                | statement create_choice           {;}
-                | statement create_config           {;}
+statement       : create_choice ENDCHOICE                       { printf("statement create choice\n"); }
+                | create_config                                 { printf("statement create config\n"); }
+                | statement create_choice ENDCHOICE             { ; }
+                | statement create_config                       { ; }
                 ;
 
-create_choice   : CHOICE VARIABLE                   {printf("create choice %s\n", $2);}
-                | create_choice PROMPT STRING       {printf("choice prompt %s\n", $3);}
-                | create_choice DEFAULT VARIABLE    {printf("choice default %s\n", $3);}
-                | create_choice help_text           {printf("choice help\n");}
-                | create_choice ENDCHOICE           {printf("end choice\n");}
+create_choice   : CHOICE VARIABLE                               { printf("\tcreate choice %s\n", $2); }
+                | create_choice PROMPT STRING                   { printf("\tchoice prompt %s\n", $3); }
+                | create_choice DEFAULT VARIABLE                { printf("\tchoice default %s\n", $3); }
+                | create_choice HELP                            { printf("\tchoice help%s\n", $2); }
+                | create_choice create_config                   { printf("\tAdding config to choice\n"); }
                 ;
 
-create_config   : CONFIG VARIABLE TYPE value        {printf("create config %s, %s, %s\n", $2, $3, $4);}
-                | create_config DEPENDS VARIABLE    {printf("config depends on %s\n", $3);}
-                | create_config DEFAULT value       {printf("config defaults to %s\n", $3);}
-                | create_config help_text           {printf("config help\n");}
+create_config   : CONFIG VARIABLE TYPE value                    { printf("\tcreate config %s, %s, %s\n", $2, $3, $4); }
+                | create_config DEPENDS VARIABLE                { printf("\tconfig depends on %s\n", $3); }
+                | create_config DEFAULT value                   { printf("\tconfig defaults to %s\n", $3); }
+                | create_config HELP                            { printf("\tconfig help %s\n", $2); }
                 ;
 
-help_text       : HELP HELP_TEXT                    {printf("Help: %s\n", $2);}
-                ;
-
-value           : NUMBER                            {printf("number %s\n", $1);}
-                | HEX_VALUE                         {printf("hex %s\n", $1);}
-                | STRING                            {printf("string %s\n", $1);}
-                | BOOL                              {printf("boolean %s\n", $1);}
-                | TRISTATE                          {printf("tristate %s\n", $1);}
+value           : NUMBER                                        { printf("\tnumber %s\n", $1); }
+                | HEX_VALUE                                     { printf("\thex %s\n", $1); }
+                | STRING                                        { printf("\tstring %s\n", $1); }
+                | BOOL                                          { printf("\tboolean %s\n", $1); }
+                | TRISTATE                                      { printf("\ttristate %s\n", $1); }
                 ;
 
 %%
