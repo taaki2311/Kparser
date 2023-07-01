@@ -1,0 +1,8 @@
+.vscode/
+Kconfig
+y.tab.c
+y.tab.h
+lex.yy.c
+y.tab.o
+lex.yy.o
+Kparser
