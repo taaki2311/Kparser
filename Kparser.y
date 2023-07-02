@@ -13,7 +13,7 @@ extern FILE *yyin;
 %}
 
 %union {char *string;}
-%start statement
+%start statements
 
 %token CONFIG
 %token CHOICE
@@ -37,9 +37,11 @@ extern FILE *yyin;
 
 statement   : choice ENDCHOICE                          { printf("statement create choice\n"); }
             | config                                    { printf("statement create config\n"); }
-            | statement choice ENDCHOICE                { printf("statement create choice\n"); }
-            | statement config                          { printf("statement create config\n"); }
-            | statement endofline                       { ; }
+            | endofline                                 { ; }
+            ;
+
+statements  : statement                                 { ; }
+            | statements statement                      { ; }
             ;
 
 choice      : CHOICE VARIABLE endofline                 { printf("\tcreate choice %s\n", $2); }
