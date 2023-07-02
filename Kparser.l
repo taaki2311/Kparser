@@ -17,7 +17,6 @@ default         { return DEFAULT; }
 "depends on"    { return DEPENDS; }
 endchoice       { return ENDCHOICE; }
 prompt          { return PROMPT; }
-\n              { return EOL; }
 bool|string     { getString(); return TYPE; }
 [A-Z_]+         { getString(); return VARIABLE; }
 \".*\"          { getString(); return STRING; }
@@ -25,7 +24,7 @@ bool|string     { getString(); return TYPE; }
 [0-9a-fA-F]+    { getString(); return HEX_VALUE; }
 y|n             { getString(); return BOOL; }
 y|n|m           { getString(); return TRISTATE; }
-[ \t]*          { ; }
+[ \t\n]*          { ; }
 .               { ECHO; yyerror("unexpected character"); }
 
 %%

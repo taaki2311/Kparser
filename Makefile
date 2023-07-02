@@ -1,5 +1,3 @@
-CPPFLAGS += -Og -ggdb
-
 TARGET = Kparser
 LEX_C = lex.yy.c
 YACC_C = y.tab.c
