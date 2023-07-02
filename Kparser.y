@@ -30,6 +30,8 @@ extern FILE *yyin;
 %token <string> BOOL
 %token <string> TRISTATE
 
+%token <string> HELP
+
 %type <string> value
 
 %%
@@ -45,12 +47,14 @@ statements  : statement                                 { ; }
 choice      : CHOICE VARIABLE                  { printf("\tcreate choice %s\n", $2); }
             | choice PROMPT STRING             { printf("\tchoice prompt %s\n", $3); }
             | choice DEFAULT VARIABLE          { printf("\tchoice default %s\n", $3); }
-            | choice config                             { printf("\tAdding config to choice\n"); }
+            | choice config                    { printf("\tAdding config to choice\n"); }
+            | choice HELP                       { printf("\tchoice help %s", $2); }
             ;
 
 config      : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s, %s, %s\n", $2, $3, $4); }
             | config DEPENDS VARIABLE          { printf("\tconfig depends on %s\n", $3); }
             | config DEFAULT value             { printf("\tconfig defaults to %s\n", $3); }
+            | config HELP                       { printf("\tconfig help: %s", $2); }
             ;
 
 value       : NUMBER                                    { printf("\tnumber %s\n", $1); }

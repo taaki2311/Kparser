@@ -10,22 +10,23 @@ void getString(void);
 
 %%
 
-#.*             { ; }
-choice          { return CHOICE; }
-config          { return CONFIG; }
-default         { return DEFAULT; }
-"depends on"    { return DEPENDS; }
-endchoice       { return ENDCHOICE; }
-prompt          { return PROMPT; }
-bool|string     { getString(); return TYPE; }
-[A-Z_]+         { getString(); return VARIABLE; }
-\".*\"          { getString(); return STRING; }
-[0-9]+          { getString(); return NUMBER; }
-[0-9a-fA-F]+    { getString(); return HEX_VALUE; }
-y|n             { getString(); return BOOL; }
-y|n|m           { getString(); return TRISTATE; }
-[ \t\n]*          { ; }
-.               { ECHO; yyerror("unexpected character"); }
+#.*                 { ; }
+choice              { return CHOICE; }
+config              { return CONFIG; }
+default             { return DEFAULT; }
+"depends on"        { return DEPENDS; }
+endchoice           { return ENDCHOICE; }
+prompt              { return PROMPT; }
+help\n([ \t]+.*\n)+ { getString(); return HELP; }
+bool|string         { getString(); return TYPE; }
+[A-Z_]+             { getString(); return VARIABLE; }
+\".*\"              { getString(); return STRING; }
+[0-9]+              { getString(); return NUMBER; }
+[0-9a-fA-F]+        { getString(); return HEX_VALUE; }
+y|n                 { getString(); return BOOL; }
+y|n|m               { getString(); return TRISTATE; }
+[ \t\n]+            { ; }
+.                   { ECHO; yyerror("unexpected character"); }
 
 %%
 
