@@ -37,8 +37,8 @@ extern FILE *yyin;
 
 statement       : create_choice ENDCHOICE                       { printf("statement create choice\n"); }
                 | create_config                                 { printf("statement create config\n"); }
-                | statement create_choice ENDCHOICE             { ; }
-                | statement create_config                       { ; }
+                | statement create_choice ENDCHOICE             { printf("statement create choice\n"); }
+                | statement create_config                       { printf("statement create config\n"); }
                 ;
 
 create_choice   : CHOICE VARIABLE                               { printf("\tcreate choice %s\n", $2); }
@@ -64,17 +64,19 @@ value           : NUMBER                                        { printf("\tnumb
 %%
 
 int main(void) {
-    FILE *input = fopen("Kconfig", "r");
-    if (input == NULL)
+    yyin = fopen("Kconfig", "r");
+    if (yyin == NULL)
     {
         yyerror("Kconfig file not found");
         return 1;
     }
-    yyin = input;
 
     /* Initialize Symbol Table */
 
-    return yyparse();
+    int status = yyparse();
+
+    fclose(yyin);
+    return status;
 }
 
 void yyerror(const char *error) {

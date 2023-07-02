@@ -12,31 +12,33 @@ void getString(void);
 %%
 
 #.*                     { ; }
-"choice"                { return CHOICE; }
-"config"                { return CONFIG; }
-"default"               { return DEFAULT; }
+choice                  { return CHOICE; }
+config                  { return CONFIG; }
+default                 { return DEFAULT; }
 "depends on"            { return DEPENDS; }
-"endchoice"             { return ENDCHOICE; }
-"prompt"                { return PROMPT; }
+endchoice               { return ENDCHOICE; }
+prompt                  { return PROMPT; }
 
-("bool"|"string")       { getString(); return TYPE; }
+bool|string             { getString(); return TYPE; }
 [A-Z_]+                 { getString(); return VARIABLE; }
 "help"\n(\t"  ".*\n)*   { getString(); return HELP; }
 \".*\"                  { getString(); return STRING; }
 [0-9]+                  { getString(); return NUMBER; }
 [0-9a-fA-F]+            { getString(); return HEX_VALUE; }
-("y"|"n")               { getString(); return BOOL; }
-("y"|"n"|"m")           { getString(); return TRISTATE; }
+y|n                     { getString(); return BOOL; }
+y|n|m                   { getString(); return TRISTATE; }
 
-[ \t\s\n\r]             { ; }
+[ \t\n]                 { ; }
 .                       { ECHO; yyerror("unexpected character"); }
 
 %%
 
 void getString(void) {
-    size_t length = strlen(yytext) + 1;
-    yylval.string = malloc(length);
-    strncpy(yylval.string, yytext, length);
+    yylval.string = malloc(yyleng);
+    if (yylval.string == NULL) {
+        yyerror("Failed to allocate memory");
+    }
+    yylval.string = strncpy(yylval.string, yytext, yyleng);
 }
 
 int yywrap(void) { return 1; }
