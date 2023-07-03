@@ -10,27 +10,9 @@ void yyerror(const char *error);
 int yydebug = 1;
 
 extern FILE *yyin;
-
-struct value {
-    enum {
-        STRING,
-        INTEGER,
-        HEX_VALUE,
-        BOOL,
-        TRISTATE
-    } type;
-
-    union {
-        long number;
-        char *string;
-    };
-};
-
-char valueType(struct value *value);
-
 %}
 
-%union { char *string; long number; struct value value; }
+%union {char *string;}
 %start statements
 
 %token CONFIG
@@ -40,17 +22,17 @@ char valueType(struct value *value);
 %token DEFAULT
 %token DEPENDS
 
-%token <string> HELP
-%token <string> TYPE
 %token <string> VARIABLE
+%token <string> TYPE
+%token <string> STRING
+%token <string> NUMBER
+%token <string> HEX_VALUE
+%token <string> BOOL
+%token <string> TRISTATE
 
-%token <string> T_STRING
-%token <number> T_INTEGER
-%token <number> T_HEX_VALUE
-%token <number> T_BOOL
-%token <number> T_TRISTATE
+%token <string> HELP
 
-%type <value> value
+%type <string> value
 
 %%
 
@@ -62,25 +44,25 @@ statements  : statement                                 { ; }
             | statements statement                      { ; }
             ;
 
-choice  : CHOICE VARIABLE           { printf("\tcreate choice %s\n", $2); }
-        | choice PROMPT T_STRING    { printf("\tchoice prompt %s\n", $3); }
-        | choice DEFAULT VARIABLE   { printf("\tchoice default %s\n", $3); }
-        | choice config             { printf("\tAdding config to choice\n"); }
-        | choice HELP               { printf("\tchoice help %s", $2); }
-        ;
+choice      : CHOICE VARIABLE                  { printf("\tcreate choice %s\n", $2); }
+            | choice PROMPT STRING             { printf("\tchoice prompt %s\n", $3); }
+            | choice DEFAULT VARIABLE          { printf("\tchoice default %s\n", $3); }
+            | choice config                    { printf("\tAdding config to choice\n"); }
+            | choice HELP                       { printf("\tchoice help %s", $2); }
+            ;
 
-config  : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s, %s, %c\n", $2, $3, valueType(&$4)); }
-        | config DEPENDS VARIABLE      { printf("\tconfig depends on %s\n", $3); }
-        | config DEFAULT value         { printf("\tconfig defaults to %c\n", valueType(&$3)); }
-        | config HELP                  { printf("\tconfig help: %s", $2); }
-        ;
+config      : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s, %s, %s\n", $2, $3, $4); }
+            | config DEPENDS VARIABLE          { printf("\tconfig depends on %s\n", $3); }
+            | config DEFAULT value             { printf("\tconfig defaults to %s\n", $3); }
+            | config HELP                       { printf("\tconfig help: %s", $2); }
+            ;
 
-value : T_INTEGER   { $$.type = INTEGER;    $$.number = $1; }
-      | T_HEX_VALUE { $$.type = HEX_VALUE;  $$.number = $1; }
-      | T_STRING    { $$.type = STRING;     $$.string = $1; }
-      | T_BOOL      { $$.type = BOOL;       $$.number = $1; }
-      | T_TRISTATE  { $$.type = TRISTATE;   $$.number = $1; }
-      ;
+value       : NUMBER                                    { printf("\tnumber %s\n", $1); }
+            | HEX_VALUE                                 { printf("\thex %s\n", $1); }
+            | STRING                                    { printf("\tstring %s\n", $1); }
+            | BOOL                                      { printf("\tboolean %s\n", $1); }
+            | TRISTATE                                  { printf("\ttristate %s\n", $1); }
+            ;
 
 %%
 
@@ -98,21 +80,6 @@ int main(void) {
 
     fclose(yyin);
     return status;
-}
-
-char valueType(struct value *value) {
-    switch (value->type) {
-        case STRING:
-            return 'S';
-        case INTEGER:
-            return 'I';
-        case HEX_VALUE:
-            return 'H';
-        case BOOL:
-            return 'B';
-        case TRISTATE:
-            return 'T';
-    }
 }
 
 void yyerror(const char *error) {
