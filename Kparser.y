@@ -1,4 +1,5 @@
 %{
+#include "Kparser.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -10,21 +11,6 @@ void yyerror(const char *error);
 int yydebug = 1;
 
 extern FILE *yyin;
-
-struct value {
-    enum {
-        STRING,
-        INTEGER,
-        HEX_VALUE,
-        BOOL,
-        TRISTATE
-    } type;
-
-    union {
-        long number;
-        char *string;
-    };
-};
 
 char valueType(struct value *value);
 
