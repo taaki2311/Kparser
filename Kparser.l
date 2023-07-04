@@ -7,7 +7,9 @@
 
 void yyerror(const char *error);
 
+void getHelp(void);
 void getText(void);
+void getType(void);
 
 void getString(void);
 void getInteger(void);
@@ -25,8 +27,8 @@ default             { return DEFAULT; }
 endchoice           { return ENDCHOICE; }
 prompt              { return PROMPT; }
 
-help\n([ \t]+.*\n)+ { getText(); return HELP; }
-bool|string         { getText(); return TYPE; }
+help\n([ \t]+.*\n)+ { getHelp(); return HELP; }
+bool|string         { getType(); return TYPE; }
 [A-Z_]+             { getText(); return VARIABLE; }
 
 \".*\"              { getString(); return T_STRING; }
@@ -39,12 +41,42 @@ y|n|m               { getTristate(true); return T_TRISTATE; }
 
 %%
 
+void getHelp(void) {
+    yylval.string = malloc(yyleng - 6);
+    if (yylval.string == NULL) {
+        yyerror("Failed to allocate memory");
+    }
+    yylval.string = strncpy(yylval.string, yytext + 5, yyleng - 6);
+    yylval.string[yyleng - 6] = '\0';
+}
+
 void getText(void) {
     yylval.string = malloc(yyleng);
     if (yylval.string == NULL) {
         yyerror("Failed to allocate memory");
     }
     yylval.string = strncpy(yylval.string, yytext, yyleng);
+}
+
+void getType(void) {
+    if (strcmp("string", yytext) == 0) {
+        yylval.type = STRING;
+    }
+    else if (strcmp("integer", yytext) == 0) {
+        yylval.type = INTEGER;
+    }
+    else if (strcmp("hex", yytext) == 0) {
+        yylval.type = HEX_VALUE;
+    }
+    else if (strcmp("bool", yytext) == 0) {
+        yylval.type = BOOL;
+    }
+    else if (strcmp("tristate", yytext) == 0) {
+        yylval.type = TRISTATE;
+    }
+    else {
+        yyerror("Invalid Type");
+    }
 }
 
 void getString(void) {

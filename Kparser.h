@@ -1,15 +1,16 @@
 #ifndef KPARSER_H
 #define KPARSER_H
 
-struct value {
-    enum {
-        STRING,
-        INTEGER,
-        HEX_VALUE,
-        BOOL,
-        TRISTATE
-    } type;
+enum ktype {
+    STRING,
+    INTEGER,
+    HEX_VALUE,
+    BOOL,
+    TRISTATE
+};
 
+struct kvalue {
+    enum ktype type;
     union {
         long number;
         char *string;

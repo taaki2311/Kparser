@@ -12,11 +12,9 @@ int yydebug = 1;
 
 extern FILE *yyin;
 
-char valueType(struct value *value);
-
 %}
 
-%union { char *string; long number; struct value value; }
+%union { char *string; long number; enum ktype type; struct kvalue value; }
 %start statements
 
 %token CONFIG
@@ -27,7 +25,7 @@ char valueType(struct value *value);
 %token DEPENDS
 
 %token <string> HELP
-%token <string> TYPE
+%token <type> TYPE
 %token <string> VARIABLE
 
 %token <string> T_STRING
@@ -52,13 +50,13 @@ choice  : CHOICE VARIABLE           { printf("\tcreate choice %s\n", $2); }
         | choice PROMPT T_STRING    { printf("\tchoice prompt %s\n", $3); }
         | choice DEFAULT VARIABLE   { printf("\tchoice default %s\n", $3); }
         | choice config             { printf("\tAdding config to choice\n"); }
-        | choice HELP               { printf("\tchoice help %s", $2); }
+        | choice HELP               { printf("\tchoice help %s\n", $2); }
         ;
 
-config  : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s, %s, %c\n", $2, $3, valueType(&$4)); }
+config  : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s\n", $2); }
         | config DEPENDS VARIABLE      { printf("\tconfig depends on %s\n", $3); }
-        | config DEFAULT value         { printf("\tconfig defaults to %c\n", valueType(&$3)); }
-        | config HELP                  { printf("\tconfig help: %s", $2); }
+        | config DEFAULT value         { printf("\tconfig defaults\n"); }
+        | config HELP                  { printf("\tconfig help: %s\n", $2); }
         ;
 
 value : T_INTEGER   { $$.type = INTEGER;    $$.number = $1; }
@@ -78,27 +76,10 @@ int main(void) {
         return 1;
     }
 
-    /* Initialize Symbol Table */
-
     int status = yyparse();
 
     fclose(yyin);
     return status;
-}
-
-char valueType(struct value *value) {
-    switch (value->type) {
-        case STRING:
-            return 'S';
-        case INTEGER:
-            return 'I';
-        case HEX_VALUE:
-            return 'H';
-        case BOOL:
-            return 'B';
-        case TRISTATE:
-            return 'T';
-    }
 }
 
 void yyerror(const char *error) {
