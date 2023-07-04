@@ -14,4 +14,4 @@ $(YACC_C): Kparser.y
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(LEX_C) $(YACC_C) y.tab.h $(OBJECTS)
+	$(RM) $(TARGET) $(LEX_C) $(YACC_C) y.tab.h $(OBJECTS) y.output

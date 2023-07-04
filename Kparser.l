@@ -10,6 +10,7 @@ void yyerror(const char *error);
 void getHelp(void);
 void getText(void);
 void getType(void);
+void getDefType(void);
 
 void getString(void);
 void getInteger(void);
@@ -19,25 +20,34 @@ void getTristate(bool isTristate);
 
 %%
 
-#.*                 { ; }
-choice              { return CHOICE; }
-config              { return CONFIG; }
-default             { return DEFAULT; }
-"depends on"        { return DEPENDS; }
-endchoice           { return ENDCHOICE; }
-prompt              { return PROMPT; }
+#.*                                     { ; }
+choice                                  { return CHOICE; }
+config                                  { return CONFIG; }
+default                                 { return DEFAULT; }
+"depends on"                            { return DEPENDS; }
+endchoice                               { return ENDCHOICE; }
+endmenu                                 { return ENDMENU; }
+if                                      { return IF; }
+menu                                    { return MENU; }
+!                                       { return NOT; }
+prompt                                  { return PROMPT; }
+range                                   { return RANGE; }
+source                                  { return SOURCE; }
+select                                  { return SELECT; }
 
-help\n([ \t]+.*\n)+ { getHelp(); return HELP; }
-bool|string         { getType(); return TYPE; }
-[A-Z_]+             { getText(); return VARIABLE; }
+help\n([ \t]+.*\n)+                     { getHelp(); return HELP; }
+string|int|hex|bool|tristate            { getType(); return TYPE; }
+def_bool|def_tristate                   { getDefType(); return DEF_TYPE; }
+&&                                      { getText(); return OPERATOR; }
+[0-9_]*[A-Z][A-Z0-9_]+                  { getText(); return VARIABLE; }
 
-\".*\"              { getString(); return T_STRING; }
-[0-9]+              { getInteger(); return T_INTEGER; }
-[0-9a-fA-F]+        { getHexvalue(); return T_HEX_VALUE; }
-y|n                 { getTristate(false); return T_BOOL; }
-y|n|m               { getTristate(true); return T_TRISTATE; }
-[ \t\n]+            { ; }
-.                   { ECHO; yyerror("unexpected character"); }
+\".*\"                                  { getString(); return T_STRING; }
+[0-9]+                                  { getInteger(); return T_INTEGER; }
+[0-9a-fA-F]+                            { getHexvalue(); return T_HEX_VALUE; }
+y|n                                     { getTristate(false); return T_BOOL; }
+y|n|m                                   { getTristate(true); return T_TRISTATE; }
+[ \t\n\r]+                              { ; }
+.                                       { ECHO; yyerror("unexpected character"); }
 
 %%
 
@@ -62,7 +72,7 @@ void getType(void) {
     if (strcmp("string", yytext) == 0) {
         yylval.type = STRING;
     }
-    else if (strcmp("integer", yytext) == 0) {
+    else if (strcmp("int", yytext) == 0) {
         yylval.type = INTEGER;
     }
     else if (strcmp("hex", yytext) == 0) {
@@ -76,6 +86,18 @@ void getType(void) {
     }
     else {
         yyerror("Invalid Type");
+    }
+}
+
+void getDefType(void) {
+    if (strcmp("def_bool", yytext) == 0) {
+        yylval.type = BOOL;
+    }
+    else if (strcmp("def_tristate", yytext) == 0) {
+        yylval.type = TRISTATE;
+    }
+    else {
+        yyerror("Invalid Def_Type");
     }
 }
 

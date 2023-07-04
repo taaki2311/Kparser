@@ -20,9 +20,9 @@ struct kvalue {
 struct kconfig {
     char *name;
     enum ktype type;
-    char *depends;
     struct kvalue default_value;
     char *help;
+    char *prompt;
     struct kvalue value;
 };
 
