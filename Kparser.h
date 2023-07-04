@@ -17,4 +17,13 @@ struct kvalue {
     };
 };
 
+struct kconfig {
+    char *name;
+    enum ktype type;
+    char *depends;
+    struct kvalue default_value;
+    char *help;
+    struct kvalue value;
+};
+
 #endif /* KPARSER_H */

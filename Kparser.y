@@ -8,13 +8,17 @@
 int yylex(void);
 void yyerror(const char *error);
 
-int yydebug = 1;
-
 extern FILE *yyin;
 
 %}
 
-%union { char *string; long number; enum ktype type; struct kvalue value; }
+%union {
+    char *string;
+    long number;
+    enum ktype type;
+    struct kvalue value;
+    struct kconfig config;
+}
 %start statements
 
 %token CONFIG
@@ -35,6 +39,7 @@ extern FILE *yyin;
 %token <number> T_TRISTATE
 
 %type <value> value
+%type <config> config
 
 %%
 
@@ -53,10 +58,10 @@ choice  : CHOICE VARIABLE           { printf("\tcreate choice %s\n", $2); }
         | choice HELP               { printf("\tchoice help %s\n", $2); }
         ;
 
-config  : CONFIG VARIABLE TYPE value   { printf("\tcreate config %s\n", $2); }
-        | config DEPENDS VARIABLE      { printf("\tconfig depends on %s\n", $3); }
-        | config DEFAULT value         { printf("\tconfig defaults\n"); }
-        | config HELP                  { printf("\tconfig help: %s\n", $2); }
+config  : CONFIG VARIABLE TYPE value   { $$.name = $2; $$.type = $3; $$.value = $4; }
+        | config DEPENDS VARIABLE      { $$.depends = $3; }
+        | config DEFAULT value         { $$.default_value = $3; }
+        | config HELP                  { $$.help = $2; }
         ;
 
 value : T_INTEGER   { $$.type = INTEGER;    $$.number = $1; }

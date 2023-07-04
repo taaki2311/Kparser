@@ -10,7 +10,7 @@ $(LEX_C): Kparser.l
 	$(LEX) $<
 
 $(YACC_C): Kparser.y
-	$(YACC) $< -d --debug --verbose
+	$(YACC) $< -d
 
 .PHONY: clean
 clean:
