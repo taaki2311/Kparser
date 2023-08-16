@@ -21,25 +21,25 @@ void getTristate(bool isTristate);
 %%
 
 #.*                                     { ; }
-choice                                  { return CHOICE; }
-config                                  { return CONFIG; }
-default                                 { return DEFAULT; }
-"depends on"                            { return DEPENDS; }
-endchoice                               { return ENDCHOICE; }
-endmenu                                 { return ENDMENU; }
-if                                      { return IF; }
-menu                                    { return MENU; }
-!                                       { return NOT; }
-prompt                                  { return PROMPT; }
-range                                   { return RANGE; }
-source                                  { return SOURCE; }
-select                                  { return SELECT; }
+choice                                  { return T_CHOICE; }
+config                                  { return T_CONFIG; }
+default                                 { return T_DEFAULT; }
+"depends on"                            { return T_DEPENDS; }
+endchoice                               { return T_ENDCHOICE; }
+endmenu                                 { return T_ENDMENU; }
+if                                      { return T_IF; }
+menu                                    { return T_MENU; }
+!                                       { return T_NOT; }
+prompt                                  { return T_PROMPT; }
+range                                   { return T_RANGE; }
+source                                  { return T_SOURCE; }
+select                                  { return T_SELECT; }
 
-help\n([ \t]+.*\n)+                     { getHelp(); return HELP; }
-string|int|hex|bool|tristate            { getType(); return TYPE; }
-def_bool|def_tristate                   { getDefType(); return DEF_TYPE; }
-&&                                      { getText(); return OPERATOR; }
-[0-9_]*[A-Z][A-Z0-9_]+                  { getText(); return VARIABLE; }
+help\n([ \t]+.*\n)+                     { getHelp(); return T_HELP; }
+string|int|hex|bool|tristate            { getType(); return T_TYPE; }
+def_bool|def_tristate                   { getDefType(); return T_DEF_TYPE; }
+&&                                      { getText(); return T_OPERATOR; }
+[0-9_]*[A-Z][A-Z0-9_]+                  { getText(); return T_VARIABLE; }
 
 \".*\"                                  { getString(); return T_STRING; }
 [0-9]+                                  { getInteger(); return T_INTEGER; }
@@ -134,6 +134,7 @@ void getTristate(bool isTristate) {
             else {
                 yyerror("Value is a boolean not a tristate");
             }
+            break;
         default:
             yyerror("Tristate that is not y/n/m");
             break;

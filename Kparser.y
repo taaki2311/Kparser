@@ -22,28 +22,31 @@ void debug_print(char *string);
     enum ktype type;
     struct kvalue value;
     struct kconfig config;
+    struct kchoice choice;
+    struct kvariable variable;
+    struct krange range;
 }
 %start statements
 
-%token CONFIG
-%token CHOICE
-%token DEFAULT
-%token DEPENDS
-%token ENDCHOICE
-%token ENDMENU
-%token IF
-%token MENU
-%token NOT
-%token PROMPT
-%token RANGE
-%token SELECT
-%token SOURCE
+%token T_CONFIG
+%token T_CHOICE
+%token T_DEFAULT
+%token T_DEPENDS
+%token T_ENDCHOICE
+%token T_ENDMENU
+%token T_IF
+%token T_MENU
+%token T_NOT
+%token T_PROMPT
+%token T_RANGE
+%token T_SELECT
+%token T_SOURCE
 
-%token <string> HELP
-%token <type> TYPE
-%token <type> DEF_TYPE
-%token <string> OPERATOR
-%token <string> VARIABLE
+%token <string> T_HELP
+%token <type> T_TYPE
+%token <type> T_DEF_TYPE
+%token <string> T_OPERATOR
+%token <string> T_VARIABLE
 
 %token <string> T_STRING
 %token <number> T_INTEGER
@@ -52,85 +55,83 @@ void debug_print(char *string);
 %token <number> T_TRISTATE
 
 %type <value> value
+%type <value> default
 %type <config> config
+%type <choice> choice
+%type <variable> variable
 %type <string> prompt
+%type <range> range
+
+%left T_NOT
 
 %%
 
-statement   : menu ENDMENU      { ; }
-            | choice ENDCHOICE  { ; }
-            | config            { ; }
+statement   : menu T_ENDMENU    { ; }
+            | variable          { ; }
             ;
 
 statements  : statement             { ; }
             | statements statement  { ; }
             ;
 
-menu    : MENU T_STRING             { ; }
-        | menu choice ENDCHOICE     { ; }
-        | menu config               { ; }
-        | menu SOURCE T_STRING      { debug_print($3); }
-        ;
-
-choice  : CHOICE                    { ; }
-        | choice VARIABLE           { debug_print($2); }
-        | choice prompt             { debug_print($2); }
-        | choice DEFAULT VARIABLE   { debug_print($3); }
-        | choice depends            { ; }
-        | choice config             { ; }
-        | choice HELP               { debug_print($2); }
-        ;
-
-config  : CONFIG VARIABLE               { $$.name = $2; debug_print($2); }
-        | config TYPE T_STRING          { $$.type = $2; $$.prompt = $3; }
-        | config TYPE                   { $$.type = $2; }
-        | config prompt                 { $$.prompt = $2; }
-        | config DEF_TYPE value         { $$.type = $2; $$.value = $3; }
-        | config DEF_TYPE NOT value     { $$.type = $2; $$.value = $4; debug_print("Not"); }
-        | config depends                { debug_print("Implement Depends"); }
-        | config DEFAULT value          { $$.default_value = $3; }
-        | config HELP                   { $$.help = $2; }
-        | config SELECT VARIABLE        { debug_print($3); }
-        | config range                  { ; }
-        | config IF VARIABLE            { debug_print("Implement if"); }
-        ;
-
-prompt : PROMPT T_STRING    { $$ = $2; }
-
-value : T_INTEGER           { $$.type = INTEGER;    $$.number = $1; }
-      | T_HEX_VALUE         { $$.type = HEX_VALUE;  $$.number = $1; }
-      | T_STRING            { $$.type = STRING;     $$.string = $1; }
-      | T_BOOL              { $$.type = BOOL;       $$.number = $1; }
-      | T_TRISTATE          { $$.type = TRISTATE;   $$.number = $1; }
-      | VARIABLE            { $$.type = STRING;     $$.string = $1; debug_print($1); }
-      | operator VARIABLE   { $$.type = STRING; debug_print($2); }
-      ;
-
-depends : DEPENDS
-        | depends VARIABLE
-        | depends NOT
-        | depends operator
-        ;
-
-operator    : OPERATOR
-            | operator NOT
-            | operator OPERATOR
+menu        : T_MENU prompt             { ; }
+            | menu variable             { ; }
+            | menu T_SOURCE T_STRING    { debug_print($3); }
             ;
 
-range   : RANGE value value { debug_print("Implement Range"); }
+variable    : choice T_ENDCHOICE    { $$.type = CHOICE; $$.value.choice = $1; }
+            | config                { $$.type = CONFIG; $$.value.config = $1; }
+            | variable T_VARIABLE   { $$.name = $2; }
+            | variable prompt       { $$.prompt = $2; }
+            | variable T_HELP       { $$.help = $2; }
+            | variable default      { $$.default_value = $2; }
+            | variable depends      { ; }
+            ;
+
+choice      : T_CHOICE                    { ; }
+            | choice config             { ; }
+            ;
+
+config      : T_CONFIG               { ; }
+            | config T_TYPE                   { $$.type = $2; }
+            | config T_DEF_TYPE value         { $$.type = $2; $$.value = $3; }
+            | config T_DEF_TYPE T_NOT value     { $$.type = $2; $$.value = $4; $$.not_flag = true; }
+            | config T_SELECT T_VARIABLE        { debug_print($3); }
+            | config range                  { $$.range = $2; }
+            | config T_IF T_VARIABLE            { debug_print("Implement if"); }
+            ;
+
+prompt      : T_PROMPT T_STRING { $$ = $2; }
+            | T_STRING          { $$ = $1; }
+            ;
+
+value       : T_INTEGER   { $$.type = INTEGER;    $$.value.number = $1; }
+            | T_HEX_VALUE { $$.type = HEX_VALUE;  $$.value.number = $1; }
+            | T_STRING    { $$.type = STRING;     $$.value.string = $1; }
+            | T_BOOL      { $$.type = BOOL;       $$.value.number = $1; }
+            | T_TRISTATE  { $$.type = TRISTATE;   $$.value.number = $1; }
+            | T_VARIABLE  { $$.type = VARIABLE;   $$.value.string = $1; }
+            ;
+
+default     : T_DEFAULT value { $$ = $2; }
+
+depends     : T_DEPENDS
+            | depends T_VARIABLE
+            | T_NOT depends
+            | depends operator
+            ;
+
+operator    : T_OPERATOR
+            | T_NOT operator
+            | operator T_NOT
+            | operator T_OPERATOR
+            ;
+
+range       : T_RANGE value value { $$.lower = $2; $$.upper = $3; }
 %%
 
 int main(void) {
-    yyin = fopen("Kconfig", "r");
-    if (yyin == NULL)
-    {
-        yyerror("Kconfig file not found");
-        return 1;
-    }
-
     int status = yyparse();
-
-    fclose(yyin);
     return status;
 }
 
