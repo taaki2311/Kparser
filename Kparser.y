@@ -8,8 +8,6 @@
 int yylex(void);
 void yyerror(const char *error);
 
-extern FILE *yyin;
-
 int yydebug = 1;
 
 void debug_print(char *string);
@@ -88,17 +86,17 @@ variable    : choice T_ENDCHOICE    { $$.type = CHOICE; $$.value.choice = $1; }
             | variable depends      { ; }
             ;
 
-choice      : T_CHOICE                    { ; }
-            | choice config             { ; }
+choice      : T_CHOICE      { ; }
+            | choice config { ; }
             ;
 
-config      : T_CONFIG               { ; }
-            | config T_TYPE                   { $$.type = $2; }
-            | config T_DEF_TYPE value         { $$.type = $2; $$.value = $3; }
-            | config T_DEF_TYPE T_NOT value     { $$.type = $2; $$.value = $4; $$.not_flag = true; }
-            | config T_SELECT T_VARIABLE        { debug_print($3); }
+config      : T_CONFIG                      { ; }
+            | config T_TYPE                 { $$.type = $2; }
+            | config T_DEF_TYPE value       { $$.type = $2; $$.value = $3; }
+            | config T_DEF_TYPE T_NOT value { $$.type = $2; $$.value = $4; $$.not_flag = true; }
+            | config T_SELECT T_VARIABLE    { debug_print("Implment Select"); }
             | config range                  { $$.range = $2; }
-            | config T_IF T_VARIABLE            { debug_print("Implement if"); }
+            | config T_IF T_VARIABLE        { debug_print("Implement if"); }
             ;
 
 prompt      : T_PROMPT T_STRING { $$ = $2; }
@@ -131,8 +129,7 @@ range       : T_RANGE value value { $$.lower = $2; $$.upper = $3; }
 %%
 
 int main(void) {
-    int status = yyparse();
-    return status;
+    return yyparse();
 }
 
 void debug_print(char *string) {
