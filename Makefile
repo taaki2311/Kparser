@@ -10,6 +10,13 @@ OBJECTS := lex.yy.o y.tab.o
 
 CFLAGS += -ansi -pedantic-errors
 CPPFLAGS += -Wall -Wextra -Wformat=2
+YACCFLAGS := -d
+
+ifdef $(debug)
+CPPFLAGS += -DYACC_DEBUG
+YACCFLAGS += --debug --verbose
+endif
+
 $(TARGET): $(OBJECTS)
 	$(CC) -o $@ $^
 
@@ -17,7 +24,7 @@ $(LEX_C): $(LEX_L)
 	$(LEX) $<
 
 $(YACC_C): $(YACC_Y)
-	$(YACC) $< -d
+	$(YACC) $< $(YACCFLAGS)
 
 .PHONY: clean
 clean:

@@ -1,5 +1,6 @@
 %{
 #include "Kparser.h"
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -8,7 +9,9 @@
 int yylex(void);
 void yyerror(const char *error);
 
+#ifdef YACC_DEBUG
 int yydebug = 1;
+#endif
 
 void debug_print(char *string);
 
@@ -88,15 +91,17 @@ variable    : choice T_ENDCHOICE    { $$.type = CHOICE; $$.value.choice = $1; }
 
 choice      : T_CHOICE      { ; }
             | choice config { ; }
+            | variable      { assert($1.type == CHOICE); $$ = $1.value.choice; }
             ;
 
-config      : T_CONFIG                      { ; }
+config      : T_CONFIG                      { $$.not_flag = false; }
             | config T_TYPE                 { $$.type = $2; }
             | config T_DEF_TYPE value       { $$.type = $2; $$.value = $3; }
             | config T_DEF_TYPE T_NOT value { $$.type = $2; $$.value = $4; $$.not_flag = true; }
             | config T_SELECT T_VARIABLE    { debug_print("Implment Select"); }
             | config range                  { $$.range = $2; }
             | config T_IF T_VARIABLE        { debug_print("Implement if"); }
+            | variable                      { assert($1.type == CONFIG); $$ = $1.value.config; }
             ;
 
 prompt      : T_PROMPT T_STRING { $$ = $2; }
